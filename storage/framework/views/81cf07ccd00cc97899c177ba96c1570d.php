@@ -1,6 +1,57 @@
 <?php $__env->startSection('title', 'E-Shop - Welcome'); ?>
 
 <?php $__env->startSection('content'); ?>
+    <!-- Error Message Modal Bubble -->
+    <?php if(session('error')): ?>
+        <div class="alert notification-modal-container" style="position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 1050; width: 90%; max-width: 500px; animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); border: none; background: transparent; padding: 0; margin: 0;">
+            <div class="notification-bubble" style="background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%); border-radius: 20px; padding: 28px; box-shadow: 0 10px 40px rgba(13, 71, 161, 0.3); position: relative; overflow: hidden;">
+                <!-- Background accent -->
+                <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(255, 193, 7, 0.15); border-radius: 50%;"></div>
+                
+                <div class="d-flex align-items-flex-start gap-3" style="position: relative; z-index: 1;">
+                    <!-- Icon -->
+                    <div style="flex-shrink: 0; padding-top: 4px;">
+                        <i class="fas fa-lock-open" style="font-size: 2.5rem; color: #ffc107;"></i>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="flex-grow-1">
+                        <h5 style="margin: 0; color: white; font-weight: 700; font-size: 1.2rem;">Sign In Required</h5>
+                        <p style="margin: 10px 0 0 0; color: rgba(255, 255, 255, 0.9); font-size: 0.95rem; line-height: 1.5;"><?php echo e(session('error')); ?></p>
+                    </div>
+                    
+                    <!-- Close button -->
+                    <button type="button" class="close-bubble" data-bs-dismiss="alert" aria-label="Close" style="background: rgba(255, 193, 7, 0.2); border: 2px solid #ffc107; color: #ffc107; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; font-size: 1.2rem; padding: 0; flex-shrink: 0;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            @keyframes slideDown {
+                from {
+                    opacity: 0;
+                    transform: translateX(-50%) translateY(-30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(-50%) translateY(0);
+                }
+            }
+
+            .close-bubble:hover {
+                background: #ffc107 !important;
+                color: #1565c0 !important;
+                box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+            }
+
+            .notification-modal-container {
+                animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+        </style>
+    <?php endif; ?>
+
     <!-- HERO -->
     <header class="site-hero text-center text-white py-5" style="background: linear-gradient(135deg, #06131a 0%, #1a3a52 100%);">
         <div class="container">

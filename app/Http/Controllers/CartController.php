@@ -4,9 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth')->only(['index']);
+    }
+
     public function index(): View
     {
         return view('cart');
