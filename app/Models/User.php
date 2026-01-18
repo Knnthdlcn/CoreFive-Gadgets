@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
@@ -23,6 +23,12 @@ class User extends Authenticatable
         'password',
         'contact',
         'address',
+        'address_region_code',
+        'address_province_code',
+        'address_city_code',
+        'address_barangay_code',
+        'address_street',
+        'address_postal_code',
         'role',
         'profile_photo',
     ];
@@ -46,8 +52,14 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'banned_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function getIsBannedAttribute(): bool
+    {
+        return !is_null($this->banned_at);
     }
 
     public function orders()

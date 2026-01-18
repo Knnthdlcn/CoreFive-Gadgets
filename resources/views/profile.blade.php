@@ -85,6 +85,65 @@
                                 <input type="email" name="email" class="form-control" value="{{ Auth::user()->email }}" required style="border-radius: 8px; border: 1px solid #dee2e6; padding: 12px;">
                             </div>
 
+                            <div class="mb-3">
+                                <label class="form-label" style="font-weight: 600; color: #495057;">Phone Number</label>
+                                <input type="tel" name="contact" class="form-control" value="{{ Auth::user()->contact }}" placeholder="09XXXXXXXXX" inputmode="numeric" maxlength="11" autocomplete="tel" style="border-radius: 8px; border: 1px solid #dee2e6; padding: 12px;">
+                                <small class="text-muted">Format: 09XXXXXXXXX</small>
+                            </div>
+
+                            <hr class="my-4" style="border-color: #e9ecef;">
+
+                            <h6 class="mb-3" style="font-weight: 700; color: #2c3e50;">Shipping Address (Philippines)</h6>
+
+                            <input type="hidden" name="address" id="profileAddressManual" value="{{ Auth::user()->address }}">
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label" style="font-weight: 600; color: #495057;">Region</label>
+                                    <select id="profileRegion" name="address_region_code" class="form-select" style="border-radius: 8px; border: 1px solid #dee2e6; padding: 12px;">
+                                        <option value="">Select region</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" style="font-weight: 600; color: #495057;">Province</label>
+                                    <select id="profileProvince" name="address_province_code" class="form-select" disabled style="border-radius: 8px; border: 1px solid #dee2e6; padding: 12px;">
+                                        <option value="">Select province</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label" style="font-weight: 600; color: #495057;">City / Municipality</label>
+                                    <select id="profileCity" name="address_city_code" class="form-select" disabled style="border-radius: 8px; border: 1px solid #dee2e6; padding: 12px;">
+                                        <option value="">Select city/municipality</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" style="font-weight: 600; color: #495057;">Barangay</label>
+                                    <select id="profileBarangay" name="address_barangay_code" class="form-select" disabled style="border-radius: 8px; border: 1px solid #dee2e6; padding: 12px;">
+                                        <option value="">Select barangay</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label class="form-label" style="font-weight: 600; color: #495057;">Street / Building / Unit</label>
+                                    <input type="text" id="profileStreet" name="address_street" class="form-control" value="{{ Auth::user()->address_street }}" placeholder="House no., street, subdivision, unit" style="border-radius: 8px; border: 1px solid #dee2e6; padding: 12px;">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label" style="font-weight: 600; color: #495057;">Postal Code</label>
+                                    <input type="text" id="profilePostal" name="address_postal_code" class="form-control" value="{{ Auth::user()->address_postal_code }}" placeholder="e.g. 1000" style="border-radius: 8px; border: 1px solid #dee2e6; padding: 12px;">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" style="font-weight: 600; color: #495057;">Address Preview</label>
+                                <textarea id="profileAddressPreview" class="form-control" rows="2" readonly style="border-radius: 8px; border: 1px solid #dee2e6; padding: 12px; background: #f8f9fa;">{{ Auth::user()->address }}</textarea>
+                                <small class="text-muted">This is what will be used at checkout when you choose “saved address”.</small>
+                            </div>
+
                             <div class="d-grid">
                                 <button type="submit" class="btn" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); border: none; color: #222; font-weight: 600; border-radius: 8px; padding: 12px; box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3); transition: all 0.3s ease;">
                                     <i class="fas fa-save me-2"></i>Save Changes
@@ -127,7 +186,68 @@
                         </form>
                     </div>
                 </div>
+
+                <!-- Logout (bottom of account page) -->
+                <div class="card border-0 shadow-sm mt-4" style="border-radius: 12px;">
+                    <div class="card-body" style="padding: 24px;">
+                        <h5 class="card-title mb-3" style="font-weight: 700; color: #2c3e50;">
+                            <i class="fas fa-right-from-bracket me-2" style="color: #dc3545;"></i>Logout
+                        </h5>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-outline-danger" style="font-weight: 700; border-radius: 10px; padding: 12px; border-width: 2px;">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Log out
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('js/ph-address.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const manualAddress = document.getElementById('profileAddressManual');
+            const preview = document.getElementById('profileAddressPreview');
+
+            const clearManual = () => {
+                if (manualAddress) manualAddress.value = '';
+            };
+
+            // Force contact input to digits only and max length 11
+            document.querySelector('input[name="contact"]')?.addEventListener('input', function() {
+                const digitsOnly = this.value.replace(/\D/g, '').slice(0, 11);
+                if (this.value !== digitsOnly) this.value = digitsOnly;
+            });
+
+            if (window.PHAddress && window.PHAddress.initSelector) {
+                window.PHAddress.initSelector({
+                    regionSelect: '#profileRegion',
+                    provinceSelect: '#profileProvince',
+                    citySelect: '#profileCity',
+                    barangaySelect: '#profileBarangay',
+                    streetInput: '#profileStreet',
+                    postalInput: '#profilePostal',
+                    previewTextarea: '#profileAddressPreview',
+                    onAnyChange: clearManual,
+                    initial: {
+                        region: @json(Auth::user()->address_region_code),
+                        province: @json(Auth::user()->address_province_code),
+                        city: @json(Auth::user()->address_city_code),
+                        barangay: @json(Auth::user()->address_barangay_code),
+                    },
+                });
+            }
+
+            // If user has no structured fields yet, keep preview as-is.
+            if (preview && !preview.value) {
+                preview.value = @json(Auth::user()->address);
+            }
+        });
+    </script>
+@endpush

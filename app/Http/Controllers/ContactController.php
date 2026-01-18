@@ -16,9 +16,12 @@ class ContactController extends Controller
     public function store(Request $request): \Illuminate\Http\JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|min:2',
+            'name' => ['required', 'string', 'min:2', 'max:255', "regex:/^[A-Za-z]+(?:[-'][A-Za-z]+)*(?:\\s+[A-Za-z]+(?:[-'][A-Za-z]+)*)*$/"],
             'email' => 'required|email',
+            'contact' => ['required', 'regex:/^09\d{9}$/'],
             'message' => 'required|string|min:10',
+        ], [
+            'name.regex' => 'Full name may only contain letters, spaces, hyphens, and apostrophes.',
         ]);
 
         Contact::create($validated);

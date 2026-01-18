@@ -252,6 +252,12 @@
             margin-top: 30px;
         }
 
+        /* Laravel pagination may render SVG arrows (Tailwind default). Constrain them in admin just in case. */
+        nav[aria-label="Pagination Navigation"] svg {
+            width: 18px;
+            height: 18px;
+        }
+
         .page-link {
             color: #1565c0;
             border: 1px solid #dee2e6;
@@ -262,9 +268,10 @@
             background: #e7f1ff;
         }
 
-        .page-link.active {
+        .page-item.active .page-link {
             background: #1565c0;
             border-color: #1565c0;
+            color: #fff;
         }
 
         @media (max-width: 768px) {
@@ -334,11 +341,11 @@
                     <span>Back to Store</span>
                 </a>
 
-                <form action="{{ route('logout') }}" method="POST" style="display: none;" id="logoutForm">
+                <form action="{{ route('admin.logout') }}" method="POST" style="display: none;" id="adminLogoutForm">
                     @csrf
                 </form>
 
-                <button class="nav-link" onclick="document.getElementById('logoutForm').submit();">
+                <button class="nav-link" onclick="document.getElementById('adminLogoutForm').submit();">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </button>

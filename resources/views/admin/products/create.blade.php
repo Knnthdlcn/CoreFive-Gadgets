@@ -8,7 +8,7 @@
     </div>
 
     <div class="admin-card p-4">
-        <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
+        <form id="productForm" action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" novalidate>
             @csrf
 
             <div class="row">
@@ -32,7 +32,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="price" class="form-label fw-semibold">Price ($) *</label>
+                                <label for="price" class="form-label fw-semibold">Price (₱) *</label>
                                 <input type="number" step="0.01" class="form-control @error('price') is-invalid @enderror" id="price" name="price" value="{{ old('price') }}" required style="border-radius: 8px; border: 2px solid #e0e0e0; padding: 12px;">
                                 @error('price')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -42,15 +42,41 @@
 
                         <div class="col-md-6">
                             <div class="mb-3">
+                                <label for="stock" class="form-label fw-semibold">Stock Quantity</label>
+                                <input type="number" min="0" step="1" class="form-control @error('stock') is-invalid @enderror" id="stock" name="stock" value="{{ old('stock', 0) }}" style="border-radius: 8px; border: 2px solid #e0e0e0; padding: 12px;">
+                                @error('stock')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <div class="form-text">Set to 0 for out of stock.</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
                                 <label for="category" class="form-label fw-semibold">Category *</label>
                                 <select class="form-control @error('category') is-invalid @enderror" id="category" name="category" required style="border-radius: 8px; border: 2px solid #e0e0e0; padding: 12px;">
                                     <option value="">-- Select Category --</option>
-                                    <option value="Phones" @if(old('category') === 'Phones') selected @endif>Phones</option>
-                                    <option value="Computing" @if(old('category') === 'Computing') selected @endif>Computing</option>
-                                    <option value="Accessories" @if(old('category') === 'Accessories') selected @endif>Accessories</option>
+                                    @forelse($categories as $cat)
+                                        <option value="{{ $cat }}" @if(old('category') === $cat) selected @endif>{{ $cat }}</option>
+                                    @empty
+                                        <option disabled>No categories available</option>
+                                    @endforelse
                                 </select>
                                 @error('category')
                                     <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Unlimited Stock</label>
+                                <div class="form-check" style="margin-top: 10px;">
+                                    <input class="form-check-input" type="checkbox" value="1" id="stock_unlimited" name="stock_unlimited" {{ old('stock_unlimited') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="stock_unlimited">Mark as unlimited</label>
+                                </div>
+                                @error('stock_unlimited')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
@@ -83,10 +109,18 @@
         </form>
     </div>
 
+    <style>
+        .field-error { border-color: #e74c3c !important; box-shadow: 0 0 0 3px rgba(231,76,60,0.18); }
+    </style>
+
     <script>
         const imageInput = document.getElementById('image');
         const imageDropZone = document.getElementById('imageDropZone');
         const imagePreview = document.getElementById('imagePreview');
+        const form = document.getElementById('productForm');
+        const categorySelect = document.getElementById('category');
+        const unlimitedCheckbox = document.getElementById('stock_unlimited');
+        const stockInput = document.getElementById('stock');
 
         imageDropZone.addEventListener('click', () => imageInput.click());
 
@@ -109,6 +143,32 @@
         });
 
         imageInput.addEventListener('change', handleImagePreview);
+
+        form.addEventListener('submit', (e) => {
+            if (!categorySelect.value) {
+                e.preventDefault();
+                categorySelect.classList.add('field-error');
+                categorySelect.focus();
+            }
+        });
+
+        categorySelect.addEventListener('change', () => {
+            if (categorySelect.value) {
+                categorySelect.classList.remove('field-error');
+            }
+        });
+
+        function syncStockToggle() {
+            if (!unlimitedCheckbox || !stockInput) return;
+            const unlimited = unlimitedCheckbox.checked;
+            stockInput.disabled = unlimited;
+            stockInput.style.opacity = unlimited ? '0.6' : '1';
+        }
+
+        if (unlimitedCheckbox) {
+            unlimitedCheckbox.addEventListener('change', syncStockToggle);
+            syncStockToggle();
+        }
 
         function handleImagePreview() {
             imagePreview.innerHTML = '';

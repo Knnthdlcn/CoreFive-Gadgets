@@ -84,19 +84,31 @@
           showLoginModal();
           return;
         }
-        if (window.Cart) {
-          if (window.Cart.clear) window.Cart.clear();
-          if (window.Cart.addToCart) {
-            const cartProduct = {
-              product_id: product.id || product.product_id,
-              name: product.title || product.product_name,
-              price: parseFloat(product.price),
-              image: imgSrc
-            };
-            window.Cart.addToCart(cartProduct);
-          }
-        }
-        window.location.href = '/checkout';
+        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        fetch('/buy-now', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrf
+          },
+          body: JSON.stringify({ product_id: product.id || product.product_id, quantity: 1 })
+        })
+          .then(async (response) => {
+            if (response.redirected) {
+              window.location.href = response.url;
+              return null;
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (data && data.success) {
+              window.location.href = data.redirect || '/checkout';
+            }
+          })
+          .catch(() => {
+            window.location.href = '/checkout';
+          });
         bsModal.hide();
       };
     }
@@ -127,12 +139,31 @@
             showLoginModal();
             return;
           }
-          if (window.Cart) {
-            // Clear cart and add only this item for Buy Now
-            if (window.Cart.clear) window.Cart.clear();
-            if (window.Cart.addToCart) window.Cart.addToCart(product);
-          }
-          window.location.href = '/checkout';
+          const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+          fetch('/buy-now', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'X-CSRF-TOKEN': csrf
+            },
+            body: JSON.stringify({ product_id: product.id || product.product_id, quantity: 1 })
+          })
+            .then(async (response) => {
+              if (response.redirected) {
+                window.location.href = response.url;
+                return null;
+              }
+              return response.json();
+            })
+            .then((data) => {
+              if (data && data.success) {
+                window.location.href = data.redirect || '/checkout';
+              }
+            })
+            .catch(() => {
+              window.location.href = '/checkout';
+            });
         });
       }
 

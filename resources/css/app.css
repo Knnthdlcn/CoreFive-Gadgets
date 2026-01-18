@@ -1,3 +1,8 @@
+/* Legacy site styles (pre-Vite)
+    Note: PostCSS requires @import rules to appear before any other statements.
+*/
+@import '../../public/css/styles.css';
+
 @import 'tailwindcss';
 
 @import 'tw-animate-css';
@@ -171,5 +176,4 @@
     }
 }
 
-/* Legacy site styles (pre-Vite) */
-@import '../../public/css/styles.css';
+

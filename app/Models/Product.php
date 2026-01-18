@@ -10,10 +10,129 @@ class Product extends Model
     use HasFactory;
 
     protected $primaryKey = 'product_id';
-    protected $fillable = ['product_name', 'name', 'description', 'price', 'image_path', 'image', 'category'];
-    public $timestamps = false;
-        // Append computed URL to JSON output
-        protected $appends = ['image_url'];
+    protected $fillable = [
+        'product_name',
+        'description',
+        'price',
+        'image_path',
+        'category',
+        'stock',
+        'stock_unlimited',
+        'stock_updated_at',
+    ];
+    public $timestamps = true;
+
+    // Append computed fields to JSON output
+    protected $appends = ['image_url', 'has_variants', 'price_range'];
+
+    protected $casts = [
+        'stock_unlimited' => 'boolean',
+        'stock_updated_at' => 'datetime',
+    ];
+
+    public function stockAudits()
+    {
+        return $this->hasMany(ProductStockAudit::class, 'product_id', 'product_id');
+    }
+
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class, 'product_id', 'product_id')
+            ->where('is_active', true)
+            ->orderBy('name');
+    }
+
+    public function getEffectiveStockUnlimitedAttribute(): bool
+    {
+        if ($this->has_variants) {
+            if (array_key_exists('variants_unlimited_count', $this->attributes)) {
+                return (int) ($this->attributes['variants_unlimited_count'] ?? 0) > 0;
+            }
+
+            if ($this->relationLoaded('variants')) {
+                return $this->variants->contains(fn ($v) => (bool) ($v->stock_unlimited ?? false));
+            }
+
+            return $this->variants()->where('stock_unlimited', true)->exists();
+        }
+
+        return (bool) ($this->stock_unlimited ?? false);
+    }
+
+    public function getEffectiveStockAttribute(): int
+    {
+        if ($this->has_variants) {
+            if ($this->effective_stock_unlimited) {
+                return 0;
+            }
+
+            if (array_key_exists('variants_stock_sum', $this->attributes)) {
+                return (int) ($this->attributes['variants_stock_sum'] ?? 0);
+            }
+
+            if ($this->relationLoaded('variants')) {
+                return (int) $this->variants->sum(fn ($v) => (int) ($v->stock ?? 0));
+            }
+
+            return (int) $this->variants()->sum('stock');
+        }
+
+        return (int) ($this->stock ?? 0);
+    }
+
+    public function getHasVariantsAttribute(): bool
+    {
+        if (array_key_exists('variants_count', $this->attributes)) {
+            return (int) $this->attributes['variants_count'] > 0;
+        }
+
+        if ($this->relationLoaded('variants')) {
+            return $this->variants->isNotEmpty();
+        }
+
+        return $this->variants()->exists();
+    }
+
+    public function getPriceRangeAttribute(): array
+    {
+        if (!$this->has_variants) {
+            $p = (float) ($this->price ?? 0);
+            return ['min' => $p, 'max' => $p];
+        }
+
+        $variants = $this->relationLoaded('variants') ? $this->variants : $this->variants()->get();
+        if ($variants->isEmpty()) {
+            $p = (float) ($this->price ?? 0);
+            return ['min' => $p, 'max' => $p];
+        }
+
+        $prices = $variants->map(fn ($v) => (float) ($v->effective_price ?? $this->price ?? 0));
+        return ['min' => (float) $prices->min(), 'max' => (float) $prices->max()];
+    }
+
+    public function getStockStateAttribute(): string
+    {
+        if ($this->effective_stock_unlimited) return 'unlimited';
+        $qty = (int) ($this->effective_stock ?? 0);
+        if ($qty <= 0) return 'out_of_stock';
+        if ($qty <= 5) return 'low_stock';
+        return 'in_stock';
+    }
+
+    public function getStockDisplayTextAttribute(): string
+    {
+        return match ($this->stock_state) {
+            'unlimited' => 'In stock',
+            'out_of_stock' => 'Out of stock',
+            'low_stock' => 'Only ' . (int) ($this->effective_stock ?? 0) . ' left',
+            default => 'In stock (' . (int) ($this->effective_stock ?? 0) . ')',
+        };
+    }
+
+    public function getIsOutOfStockAttribute(): bool
+    {
+        return !$this->effective_stock_unlimited && (int) ($this->effective_stock ?? 0) <= 0;
+    }
     
     public function orderItems()
     {

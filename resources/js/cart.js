@@ -6,7 +6,7 @@
   function readCart() {
     try {
       return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    } catch (e) {
+    } catch {
       return [];
     }
   }

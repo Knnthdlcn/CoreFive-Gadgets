@@ -1,6 +1,6 @@
 <?php
 
-$db = new PDO('mysql:host=127.0.0.1;dbname=eshop', 'root', '');
+$db = new PDO('mysql:host=127.0.0.1;dbname=eshop', 'root', 'TempPass12345!');
 
 $updates = [
     'iPhone 15 Pro Max' => '/images/iPhone_15_Pro_Max_Blue_Titanium.jpg',

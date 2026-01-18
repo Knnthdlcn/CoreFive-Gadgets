@@ -72,10 +72,11 @@ a.disabled, a[aria-disabled="true"] { opacity: 0.65; }
 	/* Colors */
 	--text-color: #212529;
 	--muted-color: #6c757d;
-	--nav-brand-color: #ffd900;
+	--nav-brand-color: #ffc107;
+	--nav-link-color: rgba(255, 255, 255, 0.85);
 	--hero-bg-color: #06131a;
-	--hero-text-color: rgb(255, 238, 0);
-	--footer-text-color: rgb(255, 238, 0);
+	--hero-text-color: rgba(255, 255, 255, 0.95);
+	--footer-text-color: rgba(255, 255, 255, 0.85);
 
 	/* Sizes */
 	--nav-brand-size: 1.05rem;
@@ -94,12 +95,13 @@ body { font-family: var(--site-font); color: var(--text-color); }
 
 /* Navbar branding */
 .navbar-brand { font-family: var(--heading-font); font-size: var(--nav-brand-size); color: var(--nav-brand-color); }
-.navbar .nav-link { color: rgba(255, 208, 0, 0.85); }
+.navbar .nav-link { color: var(--nav-link-color); }
+.navbar .nav-link:hover, .navbar .nav-link:focus { color: var(--nav-brand-color); }
 
 /* Hero typography */
 .site-hero { background-color: var(--hero-bg-color); }
 .site-hero h1 { font-family: var(--heading-font); font-size: var(--hero-heading-size); color: var(--hero-text-color); margin-bottom: 0.25rem; }
-.site-hero p.lead { font-size: var(--hero-lead-size); color: rgba(255, 230, 0, 0.9); }
+.site-hero p.lead { font-size: var(--hero-lead-size); color: rgba(255, 255, 255, 0.82); }
 
 /* Cards */
 .card .card-title { font-size: var(--card-title-size); font-weight: 600; font-family: var(--heading-font); }

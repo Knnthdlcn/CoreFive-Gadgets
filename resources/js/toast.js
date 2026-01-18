@@ -56,7 +56,7 @@
       setTimeout(() => {
         try {
           container.removeChild(t);
-        } catch (e) {}
+        } catch {}
       }, 260);
     }
 

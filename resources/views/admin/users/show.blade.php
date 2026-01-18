@@ -23,13 +23,19 @@
 
                         <p style="color: #7f8c8d; margin: 0 0 5px 0;"><strong>Email</strong></p>
                         <p style="margin: 0 0 15px 0;">{{ $user->email }}</p>
+                    @if(!empty($user->banned_at))
+                        <div class="alert alert-danger" style="border-radius: 12px; margin-bottom: 18px;">
+                            <strong>Account is banned.</strong>
+                            <span class="ms-2">This user cannot log in. You can unban the account anytime.</span>
+                        </div>
+                    @endif
                     </div>
                     <div class="col-md-6">
                         <p style="color: #7f8c8d; margin: 0 0 5px 0;"><strong>Last Name</strong></p>
                         <p style="margin: 0 0 15px 0;">{{ $user->last_name }}</p>
 
                         <p style="color: #7f8c8d; margin: 0 0 5px 0;"><strong>Phone</strong></p>
-                        <p style="margin: 0 0 15px 0;">{{ $user->phone ?? 'Not provided' }}</p>
+                        <p style="margin: 0 0 15px 0;">{{ $user->contact ?? 'Not provided' }}</p>
                     </div>
                 </div>
 
@@ -57,7 +63,7 @@
                                     <tr>
                                         <td><a href="{{ route('admin.orders.show', $order) }}" style="text-decoration: none; color: #1565c0; font-weight: 600;">#{{ $order->id }}</a></td>
                                         <td>{{ $order->created_at->format('M d, Y') }}</td>
-                                        <td>${{ number_format($order->total, 2) }}</td>
+                                        <td>₱{{ number_format($order->total, 2) }}</td>
                                         <td>
                                             <span class="badge" style="background: @if($order->status === 'completed') #28a745 @elseif($order->status === 'pending') #ff9800 @else #6c757d @endif; color: white;">
                                                 {{ ucfirst($order->status) }}
@@ -83,12 +89,12 @@
                 </p>
                 <p style="margin: 0 0 15px 0;">
                     <strong>Total Spent:</strong><br>
-                    <span style="font-size: 2rem; font-weight: 700; color: #28a745;">${{ number_format($user_orders->sum('total'), 2) }}</span>
+                    <span style="font-size: 2rem; font-weight: 700; color: #28a745;">₱{{ number_format($user_orders->sum('total'), 2) }}</span>
                 </p>
                 @if($user_orders->count())
                     <p style="margin: 0;">
                         <strong>Average Order Value:</strong><br>
-                        <span style="font-size: 1.3rem; font-weight: 700; color: #ff9800;">${{ number_format($user_orders->avg('total'), 2) }}</span>
+                        <span style="font-size: 1.3rem; font-weight: 700; color: #ff9800;">₱{{ number_format($user_orders->avg('total'), 2) }}</span>
                     </p>
                 @endif
             </div>

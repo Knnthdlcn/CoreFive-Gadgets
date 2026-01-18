@@ -38,13 +38,18 @@
                                 @csrf
                                 <div class="mb-3">
                                     <label for="name" class="form-label fw-semibold" style="color: #2c3e50; font-size: 0.95rem;">Full Name</label>
-                                    <input type="text" id="name" name="name" class="form-control" placeholder="Your name" minlength="2" style="border-radius: 9px; border: 2px solid #e0e0e0; padding: 12px 14px; transition: all 0.3s ease; font-size: 0.94rem;">
+                                    <input type="text" id="name" name="name" class="form-control" placeholder="Your name" minlength="2" required pattern="[A-Za-z]+([-'][A-Za-z]+)*(\s+[A-Za-z]+([-'][A-Za-z]+)*)*" title="Letters, spaces, hyphens, and apostrophes only" style="border-radius: 9px; border: 2px solid #e0e0e0; padding: 12px 14px; transition: all 0.3s ease; font-size: 0.94rem;">
                                     <small style="color: #999; display: block; margin-top: 4px;">How should we address you?</small>
                                 </div>
                                 <div class="mb-3">
                                     <label for="email" class="form-label fw-semibold" style="color: #2c3e50; font-size: 0.95rem;">Email Address</label>
                                     <input type="email" id="email" name="email" class="form-control" placeholder="name@example.com" style="border-radius: 9px; border: 2px solid #e0e0e0; padding: 12px 14px; transition: all 0.3s ease; font-size: 0.94rem;">
                                     <small style="color: #999; display: block; margin-top: 4px;">We'll reply to this address</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="contact" class="form-label fw-semibold" style="color: #2c3e50; font-size: 0.95rem;">Phone Number</label>
+                                    <input type="tel" id="contact" name="contact" class="form-control" placeholder="09XXXXXXXXX" inputmode="numeric" maxlength="11" autocomplete="tel" style="border-radius: 9px; border: 2px solid #e0e0e0; padding: 12px 14px; transition: all 0.3s ease; font-size: 0.94rem;">
+                                    <small style="color: #999; display: block; margin-top: 4px;">Format: 09XXXXXXXXX (11 digits)</small>
                                 </div>
                                 <div class="mb-3">
                                     <label for="message" class="form-label fw-semibold" style="color: #2c3e50; font-size: 0.95rem;">Message</label>
@@ -163,10 +168,11 @@
                     // Get form fields
                     const nameInput = document.getElementById('name');
                     const emailInput = document.getElementById('email');
+                    const contactInput = document.getElementById('contact');
                     const messageInput = document.getElementById('message');
                 
                     // Clear previous validation states
-                    [nameInput, emailInput, messageInput].forEach(input => {
+                    [nameInput, emailInput, contactInput, messageInput].forEach(input => {
                         input.classList.remove('is-invalid');
                         input.style.borderColor = '#e0e0e0';
                         input.style.background = 'white';
@@ -176,13 +182,15 @@
                     let errorMessage = '';
                 
                     // Validate name
-                    if (!nameInput.value.trim() || nameInput.value.trim().length < 2) {
+                    const nameValue = nameInput.value.trim();
+                    const namePattern = /^[A-Za-z]+(?:[-'][A-Za-z]+)*(?:\s+[A-Za-z]+(?:[-'][A-Za-z]+)*)*$/;
+                    if (!nameValue || nameValue.length < 2 || !namePattern.test(nameValue)) {
                         nameInput.classList.add('is-invalid');
                         nameInput.style.borderColor = '#dc3545';
                         nameInput.style.background = '#fff5f5';
-                        if (!nameInput.value.trim()) nameInput.focus();
+                        if (!nameValue) nameInput.focus();
                         isValid = false;
-                        errorMessage = 'Please enter your full name';
+                        errorMessage = "Full name must contain letters, spaces, hyphens, and apostrophes only";
                     }
                 
                     // Validate email
@@ -194,6 +202,17 @@
                         if (isValid) emailInput.focus();
                         isValid = false;
                         if (!errorMessage) errorMessage = 'Please enter a valid email address';
+                    }
+
+                    // Validate contact
+                    const phonePattern = /^09\d{9}$/;
+                    if (!contactInput.value.trim() || !phonePattern.test(contactInput.value.trim())) {
+                        contactInput.classList.add('is-invalid');
+                        contactInput.style.borderColor = '#dc3545';
+                        contactInput.style.background = '#fff5f5';
+                        if (isValid) contactInput.focus();
+                        isValid = false;
+                        if (!errorMessage) errorMessage = 'Please enter a valid phone number (09XXXXXXXXX)';
                     }
                 
                     // Validate message
@@ -244,7 +263,7 @@
                 });
             
                 // Remove validation error when user starts typing
-                ['name', 'email', 'message'].forEach(id => {
+                ['name', 'email', 'contact', 'message'].forEach(id => {
                     const field = document.getElementById(id);
                     if (field) {
                         field.addEventListener('input', () => {
@@ -252,6 +271,14 @@
                             field.style.borderColor = '#e0e0e0';
                             field.style.background = 'white';
                         });
+                    }
+                });
+
+                // Force contact input to digits only and max length 11
+                document.getElementById('contact')?.addEventListener('input', function() {
+                    const digitsOnly = this.value.replace(/\D/g, '').slice(0, 11);
+                    if (this.value !== digitsOnly) {
+                        this.value = digitsOnly;
                     }
                 });
             </script>

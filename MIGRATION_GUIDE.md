@@ -76,8 +76,8 @@ All views converted to Blade templates with proper structure:
 
 ### Sample Login Credentials
 ```
-Email:    john@example.com
-Password: password123
+Email:    delicano123@gmail.com
+Password: 123123
 ```
 
 ## 📝 Available Features

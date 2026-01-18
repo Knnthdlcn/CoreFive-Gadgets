@@ -6,7 +6,7 @@
     <div class="admin-header">
         <div>
             <h1>Dashboard</h1>
-            <p style="color: #7f8c8d; margin: 5px 0 0 0;">Welcome back, {{ Auth::user()->first_name }}!</p>
+            <p style="color: #7f8c8d; margin: 5px 0 0 0;">Welcome back, {{ auth('admin')->user()->first_name }}!</p>
         </div>
         <div style="text-align: right;">
             <p style="color: #7f8c8d; margin: 0;">{{ now()->format('l, F j, Y') }}</p>
@@ -16,50 +16,68 @@
     <!-- Statistics Cards -->
     <div class="row mb-4 g-3">
         <div class="col-lg-3 col-md-6">
-            <div class="stat-card">
-                <h4><i class="fas fa-box me-2"></i>Total Products</h4>
-                <div class="stat-value">{{ $stats['total_products'] }}</div>
-            </div>
+            <a href="{{ route('admin.products.index') }}" class="dashboard-link">
+                <div class="stat-card">
+                    <h4><i class="fas fa-box me-2"></i>Total Products</h4>
+                    <div class="stat-value">{{ $stats['total_products'] }}</div>
+                </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6">
-            <div class="stat-card orange">
-                <h4><i class="fas fa-shopping-cart me-2"></i>Total Orders</h4>
-                <div class="stat-value">{{ $stats['total_orders'] }}</div>
-            </div>
+            <a href="{{ route('admin.orders.index') }}" class="dashboard-link">
+                <div class="stat-card orange">
+                    <h4><i class="fas fa-shopping-cart me-2"></i>Total Orders</h4>
+                    <div class="stat-value">{{ $stats['total_orders'] }}</div>
+                </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6">
-            <div class="stat-card green">
-                <h4><i class="fas fa-dollar-sign me-2"></i>Total Revenue</h4>
-                <div class="stat-value">${{ number_format($stats['total_revenue'], 2) }}</div>
-            </div>
+            <a href="{{ route('admin.orders.index') }}" class="dashboard-link">
+                <div class="stat-card green">
+                    <h4><i class="fas fa-dollar-sign me-2"></i>Total Revenue</h4>
+                    <div class="stat-value">₱{{ number_format($stats['total_revenue'], 2) }}</div>
+                    <div class="small" style="color: rgba(255,255,255,0.9); opacity: 0.9; margin-top: 6px;">Excludes cancelled orders</div>
+                </div>
+            </a>
         </div>
         <div class="col-lg-3 col-md-6">
-            <div class="stat-card purple">
-                <h4><i class="fas fa-users me-2"></i>Total Users</h4>
-                <div class="stat-value">{{ $stats['total_users'] }}</div>
-            </div>
+            <a href="{{ route('admin.users.index') }}" class="dashboard-link">
+                <div class="stat-card purple">
+                    <h4><i class="fas fa-users me-2"></i>Total Users</h4>
+                    <div class="stat-value">{{ $stats['total_users'] }}</div>
+                </div>
+            </a>
         </div>
     </div>
 
     <!-- Order Status Cards -->
     <div class="row mb-4 g-3">
         <div class="col-lg-4 col-md-6">
-            <div class="admin-card p-4">
-                <h5 style="color: #7f8c8d; font-weight: 600; margin-bottom: 10px;">Pending Orders</h5>
-                <p style="font-size: 2.2rem; font-weight: 700; color: #ff9800; margin: 0;">{{ $stats['pending_orders'] }}</p>
-            </div>
+            <a href="{{ route('admin.orders.index', ['status' => 'pending']) }}" class="dashboard-link">
+                <div class="admin-card p-4" style="cursor:pointer;">
+                    <h5 style="color: #7f8c8d; font-weight: 600; margin-bottom: 10px;">Pending Orders</h5>
+                    <p style="font-size: 2.2rem; font-weight: 700; color: #ff9800; margin: 0;">{{ $stats['pending_orders'] }}</p>
+                </div>
+            </a>
         </div>
         <div class="col-lg-4 col-md-6">
-            <div class="admin-card p-4">
-                <h5 style="color: #7f8c8d; font-weight: 600; margin-bottom: 10px;">Completed Orders</h5>
-                <p style="font-size: 2.2rem; font-weight: 700; color: #28a745; margin: 0;">{{ $stats['completed_orders'] }}</p>
-            </div>
+            <a href="{{ route('admin.orders.index', ['status' => 'completed']) }}" class="dashboard-link">
+                <div class="admin-card p-4" style="cursor:pointer;">
+                    <h5 style="color: #7f8c8d; font-weight: 600; margin-bottom: 10px;">Completed Orders</h5>
+                    <p style="font-size: 2.2rem; font-weight: 700; color: #28a745; margin: 0;">{{ $stats['completed_orders'] }}</p>
+                </div>
+            </a>
         </div>
         <div class="col-lg-4 col-md-6">
-            <div class="admin-card p-4">
-                <h5 style="color: #7f8c8d; font-weight: 600; margin-bottom: 10px;">Contact Messages</h5>
-                <p style="font-size: 2.2rem; font-weight: 700; color: #1565c0; margin: 0;">{{ $stats['total_contacts'] }}</p>
-            </div>
+            <a href="{{ route('admin.contacts.index') }}" class="dashboard-link">
+                <div class="admin-card p-4" style="cursor:pointer;">
+                    <h5 style="color: #7f8c8d; font-weight: 600; margin-bottom: 10px;">Contact Messages</h5>
+                    <p style="font-size: 2.2rem; font-weight: 700; color: #1565c0; margin: 0;">{{ $stats['total_contacts'] }}</p>
+                    @if(!empty($stats['unread_contacts']))
+                        <div class="small" style="margin-top: 6px; color:#b91c1c; font-weight: 700;">{{ $stats['unread_contacts'] }} unread</div>
+                    @endif
+                </div>
+            </a>
         </div>
     </div>
 
@@ -86,7 +104,7 @@
                                     <tr>
                                         <td><a href="{{ route('admin.orders.show', $order) }}" style="text-decoration: none; color: #1565c0; font-weight: 600;">#{{ $order->id }}</a></td>
                                         <td>{{ $order->user->first_name }} {{ $order->user->last_name }}</td>
-                                        <td>${{ number_format($order->total, 2) }}</td>
+                                        <td>₱{{ number_format($order->total, 2) }}</td>
                                         <td>
                                             <span class="badge" style="background: @if($order->status === 'completed') #28a745 @elseif($order->status === 'pending') #ff9800 @else #6c757d @endif; color: white;">
                                                 {{ ucfirst($order->status) }}
@@ -131,6 +149,21 @@
     <style>
         .space-y-3 > * + * {
             margin-top: 12px;
+        }
+
+        .dashboard-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .dashboard-link .stat-card,
+        .dashboard-link .admin-card {
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+        }
+        .dashboard-link:hover .stat-card,
+        .dashboard-link:hover .admin-card {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 26px rgba(0,0,0,0.08);
         }
     </style>
 @endsection

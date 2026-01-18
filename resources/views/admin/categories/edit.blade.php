@@ -11,7 +11,7 @@
     </div>
 
     <div class="admin-card p-4">
-        <form method="POST" action="{{ route('admin.categories.update', request()->route('id')) }}">
+        <form method="POST" action="{{ route('admin.categories.update', $category->id) }}">
             @csrf
             @method('PUT')
 
@@ -24,7 +24,7 @@
                     class="form-control @error('category_name') is-invalid @enderror" 
                     id="category_name" 
                     name="category_name" 
-                    value="{{ old('category_name', request()->route('id') === '1' ? 'Phones' : (request()->route('id') === '2' ? 'Computing' : 'Accessories')) }}"
+                    value="{{ old('category_name', $category->name) }}"
                     placeholder="e.g., Electronics, Clothing, Books"
                     required
                     style="border: 1px solid #e0e6ed; padding: 12px 15px; border-radius: 8px; font-size: 14px;"
@@ -47,7 +47,7 @@
                     rows="4"
                     placeholder="Brief description of this category"
                     style="border: 1px solid #e0e6ed; padding: 12px 15px; border-radius: 8px; font-size: 14px;"
-                >{{ old('description') }}</textarea>
+                >{{ old('description', $category->description) }}</textarea>
                 @error('description')
                     <div class="invalid-feedback d-block" style="color: #dc3545; margin-top: 5px;">
                         {{ $message }}

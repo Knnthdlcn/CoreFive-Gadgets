@@ -45,6 +45,162 @@
             margin-top: -12px;
             background-color: transparent;
         }
+
+        /* Mobile header + bottom nav spacing */
+        @media (max-width: 991.98px) {
+            .main-content {
+                padding-top: 108px;
+                margin-top: 0;
+                padding-bottom: 72px;
+            }
+
+            /* One-line category/sort row (horizontal scroll, no wrap) */
+            .category-scroll {
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding-bottom: 6px;
+                gap: 8px !important;
+            }
+            .category-scroll::-webkit-scrollbar {
+                display: none;
+            }
+            .category-scroll .btn {
+                flex: 0 0 auto;
+                white-space: nowrap;
+                padding: 7px 14px !important;
+                font-size: 0.82rem !important;
+                line-height: 1.1 !important;
+                border-radius: 999px !important;
+                font-weight: 800 !important;
+            }
+
+            /* Denser product cards (mobile 2-column) */
+            .product-card .card-img-wrapper {
+                height: 190px !important;
+            }
+
+            /* Product action buttons (mobile): compact cart + full-width primary */
+            .product-card .product-actions {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                justify-content: initial !important;
+                gap: 10px !important;
+            }
+            .product-card .product-actions .badge {
+                align-self: flex-start;
+            }
+            .product-card .product-actions-buttons {
+                width: 100% !important;
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 6px !important;
+                min-width: 0 !important;
+            }
+            .product-card .add-to-cart-btn {
+                height: 44px !important;
+                width: 40px !important;
+                flex: 0 0 40px !important;
+                padding: 0 !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border-radius: 14px !important;
+                border-width: 2px !important;
+                box-shadow: none !important;
+            }
+            .product-card .buy-now-btn {
+                height: 44px !important;
+                flex: 1 1 auto !important;
+                min-width: 0 !important;
+                padding: 0 10px !important;
+                border-radius: 14px !important;
+                font-size: 0.82rem !important;
+                line-height: 1.1 !important;
+                white-space: nowrap;
+                font-weight: 900 !important;
+                box-shadow: 0 10px 22px rgba(255, 193, 7, 0.22) !important;
+                overflow: visible;
+            }
+
+            /* On very narrow phones, prioritize the text over the icon */
+            @media (max-width: 420px) {
+                .product-card .buy-now-btn i {
+                    display: none !important;
+                }
+            }
+            .product-card .add-to-cart-btn i,
+            .product-card .buy-now-btn i {
+                font-size: 0.95rem !important;
+            }
+
+            .product-card .buy-now-btn:disabled,
+            .product-card .add-to-cart-btn:disabled {
+                opacity: 0.55;
+                box-shadow: none !important;
+            }
+        }
+
+        /* Mobile header (CoreFive theme) */
+        .mobile-topbar {
+            background: linear-gradient(135deg, #06131a 0%, #1a3a52 100%);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+        }
+        .mobile-topbar .search-wrap {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 193, 7, 0.35);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .mobile-topbar input[type="search"] {
+            background: rgba(0, 0, 0, 0.18);
+            border: 0;
+            font-size: 0.95rem;
+            padding: 12px 12px;
+            color: rgba(255, 255, 255, 0.96);
+        }
+        .mobile-topbar input[type="search"]::placeholder {
+            color: rgba(255, 255, 255, 0.72);
+        }
+        .mobile-topbar input[type="search"]:focus {
+            outline: none;
+            box-shadow: none;
+        }
+        .mobile-topbar .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 193, 7, 0.35);
+            background: rgba(0, 0, 0, 0.12);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .mobile-topbar .icon-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Mobile bottom nav */
+        .mobile-bottom-nav {
+            background: #fff;
+            border-top: 1px solid rgba(0,0,0,0.08);
+            box-shadow: 0 -10px 24px rgba(0,0,0,0.08);
+        }
+        .mobile-bottom-nav a {
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+        .mobile-bottom-nav a .nav-ico {
+            font-size: 1.05rem;
+            margin-bottom: 2px;
+        }
+        .mobile-bottom-nav a.active {
+            color: #ffc107;
+        }
         footer {
             flex-shrink: 0;
         }
@@ -228,8 +384,74 @@
     @stack('styles')
 </head>
 <body>
+    <!-- MOBILE TOP HEADER (portrait/mobile) -->
+    <div class="mobile-topbar fixed-top d-lg-none" style="z-index: 1200;">
+        <div class="container py-2">
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ route('home') }}" class="icon-btn" aria-label="Home">
+                    <i class="fas fa-store"></i>
+                </a>
+
+                <form class="flex-grow-1" action="{{ route('products.index') }}" method="GET">
+                    <div class="search-wrap d-flex align-items-center">
+                        <i class="fas fa-magnifying-glass px-3" style="color: rgba(255, 193, 7, 0.98);"></i>
+                        <input
+                            type="search"
+                            name="q"
+                            value="{{ request('q') }}"
+                            class="form-control"
+                            placeholder="Search products"
+                            aria-label="Search products"
+                        />
+                        <button class="btn" type="submit" style="background: transparent; border: 0; color: rgba(255, 193, 7, 0.98); padding: 0 12px;">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                    </div>
+                </form>
+
+                @php
+                    if (Auth::check()) {
+                        $cartCountMobile = \App\Models\CartItem::where('user_id', Auth::id())->count();
+                    } else {
+                        $cartCountMobile = count(session()->get('cart', []));
+                    }
+                @endphp
+
+                <a href="{{ route('cart.index') }}" class="icon-btn" aria-label="Cart">
+                    <i class="fas fa-cart-shopping"></i>
+                    <span class="badge bg-white text-dark" style="position:absolute; top:-6px; right:-6px; font-size: 0.68rem; border-radius: 999px; {{ $cartCountMobile > 0 ? '' : 'display:none;' }}">{{ $cartCountMobile }}</span>
+                </a>
+
+                @auth
+                    <a href="{{ route('profile') }}" class="icon-btn" aria-label="Profile">
+                        <i class="fas fa-user"></i>
+                    </a>
+                @else
+                    <button type="button" class="icon-btn" aria-label="Login" onclick="showLoginModal()">
+                        <i class="fas fa-right-to-bracket"></i>
+                    </button>
+                @endauth
+            </div>
+
+            <div class="d-flex gap-2 mt-2" style="overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;">
+                <a class="px-3 py-2" href="{{ route('products.index') }}" style="white-space: nowrap; border-radius: 999px; background: rgba(255, 193, 7, 0.16); border: 1px solid rgba(255, 193, 7, 0.28); color:#fff; text-decoration:none; font-weight: 800; font-size: 0.82rem;">
+                    0% Interest
+                </a>
+                <a class="px-3 py-2" href="{{ route('products.index') }}" style="white-space: nowrap; border-radius: 999px; background: rgba(255, 193, 7, 0.16); border: 1px solid rgba(255, 193, 7, 0.28); color:#fff; text-decoration:none; font-weight: 800; font-size: 0.82rem;">
+                    Free Shipping
+                </a>
+                <a class="px-3 py-2" href="{{ route('products.index') }}" style="white-space: nowrap; border-radius: 999px; background: rgba(255, 193, 7, 0.16); border: 1px solid rgba(255, 193, 7, 0.28); color:#fff; text-decoration:none; font-weight: 800; font-size: 0.82rem;">
+                    Hot Deals
+                </a>
+                <a class="px-3 py-2" href="{{ route('products.index') }}" style="white-space: nowrap; border-radius: 999px; background: rgba(255, 193, 7, 0.16); border: 1px solid rgba(255, 193, 7, 0.28); color:#fff; text-decoration:none; font-weight: 800; font-size: 0.82rem;">
+                    New Arrivals
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background: linear-gradient(135deg, #06131a 0%, #1a3a52 100%); box-shadow: none !important; border-bottom: none !important;">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top d-none d-lg-block" style="background: linear-gradient(135deg, #06131a 0%, #1a3a52 100%); box-shadow: none !important; border-bottom: none !important;">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="{{ route('home') }}" style="font-weight: 700; font-size: 1.4rem; letter-spacing: 0.5px;">
                 <i class="fas fa-microchip me-2" style="color: #ffc107;"></i>
@@ -251,16 +473,17 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        @auth
-                            <a class="nav-link px-3 position-relative" href="{{ route('cart.index') }}" style="font-weight: 500; transition: all 0.3s ease;">
-                                <i class="fas fa-shopping-cart me-1"></i>Cart
-                                <span id="cartBadge" style="position: absolute; top: -2px; right: 2px; color: #ffc107; font-size: 1rem; font-weight: bold; display: none; transform-origin: center;">5</span>
-                            </a>
-                        @else
-                            <a href="#" class="nav-link px-3 position-relative" onclick="event.preventDefault(); showLoginModal();" style="font-weight: 500; transition: all 0.3s ease;">
-                                <i class="fas fa-shopping-cart me-1"></i>Cart
-                            </a>
-                        @endauth
+                        <a class="nav-link px-3 position-relative" href="{{ route('cart.index') }}" style="font-weight: 500; transition: all 0.3s ease;">
+                            <i class="fas fa-shopping-cart me-1"></i>Cart
+                            @php
+                                if (Auth::check()) {
+                                    $cartCount = \App\Models\CartItem::where('user_id', Auth::id())->count();
+                                } else {
+                                    $cartCount = count(session()->get('cart', []));
+                                }
+                            @endphp
+                            <span id="cartCount" class="badge bg-warning text-dark" style="position: absolute; top: 0px; right: 8px; font-size: 0.7rem; {{ $cartCount > 0 ? '' : 'display: none;' }}">{{ $cartCount }}</span>
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link px-3" href="{{ route('contact.index') }}" style="font-weight: 500; transition: all 0.3s ease;">
@@ -268,6 +491,11 @@
                         </a>
                     </li>
                     @auth
+                        <li class="nav-item">
+                            <a class="nav-link px-3" href="{{ route('orders.index') }}" style="font-weight: 500; transition: all 0.3s ease;">
+                                <i class="fas fa-shopping-bag me-1"></i>Orders
+                            </a>
+                        </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle px-3 d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" style="font-weight: 500;">
                                 @if(Auth::user()->profile_photo)
@@ -305,6 +533,41 @@
     <div class="main-content">
         @yield('content')
     </div>
+
+    <!-- MOBILE BOTTOM NAV -->
+    <nav class="mobile-bottom-nav fixed-bottom d-lg-none" style="z-index: 1200;">
+        <div class="container">
+            <div class="d-flex justify-content-between py-2">
+                <a href="{{ route('home') }}" class="d-flex flex-column align-items-center {{ request()->routeIs('home') ? 'active' : '' }}">
+                    <i class="fas fa-house nav-ico"></i>
+                    <span>Home</span>
+                </a>
+                <a href="{{ route('products.index') }}" class="d-flex flex-column align-items-center {{ request()->routeIs('products.*') ? 'active' : '' }}">
+                    <i class="fas fa-box nav-ico"></i>
+                    <span>Products</span>
+                </a>
+                <a href="{{ route('cart.index') }}" class="d-flex flex-column align-items-center {{ request()->routeIs('cart.*') ? 'active' : '' }}">
+                    <i class="fas fa-cart-shopping nav-ico"></i>
+                    <span>Cart</span>
+                </a>
+                <a href="{{ route('orders.index') }}" class="d-flex flex-column align-items-center {{ request()->routeIs('orders.*') ? 'active' : '' }}">
+                    <i class="fas fa-bag-shopping nav-ico"></i>
+                    <span>Orders</span>
+                </a>
+                @auth
+                    <a href="{{ route('profile') }}" class="d-flex flex-column align-items-center {{ request()->routeIs('profile') ? 'active' : '' }}">
+                        <i class="fas fa-user nav-ico"></i>
+                        <span>Me</span>
+                    </a>
+                @else
+                    <a href="#" class="d-flex flex-column align-items-center" onclick="showLoginModal(); return false;">
+                        <i class="fas fa-user nav-ico"></i>
+                        <span>Me</span>
+                    </a>
+                @endauth
+            </div>
+        </div>
+    </nav>
 
     <button id="backToTop" aria-label="Back to top">
         <i class="fas fa-arrow-up"></i>

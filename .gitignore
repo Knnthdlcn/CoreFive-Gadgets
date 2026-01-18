@@ -26,3 +26,12 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Laravel runtime artifacts (never commit)
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/framework/cache/*
+/storage/logs/*
+
+# Keep placeholder .gitignore files in those folders
+!/storage/framework/**/.gitignore

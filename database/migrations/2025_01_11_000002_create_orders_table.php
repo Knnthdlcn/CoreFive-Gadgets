@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('shipping_method')->default('standard');
             $table->string('payment_method')->default('card');
             $table->text('order_notes')->nullable();
-            $table->enum('status', ['pending', 'processing', 'shipped', 'delivered', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'processing', 'shipped', 'completed', 'cancelled'])->default('pending');
             $table->timestamps();
         });
     }

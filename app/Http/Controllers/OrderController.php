@@ -2,61 +2,398 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\OrderConfirmationMail;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\CartItem;
+use App\Models\ProductVariant;
 use Illuminate\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class OrderController extends Controller
 {
-    public function checkout(): View
+    public function buyNow(Request $request): \Illuminate\Http\JsonResponse
     {
-        return view('checkout');
+        $validated = $request->validate([
+            'product_id' => 'required|integer|exists:products,product_id',
+            'product_variant_id' => 'nullable|integer',
+            'quantity' => 'nullable|integer|min:1',
+        ]);
+
+        $product = Product::where('product_id', (int) $validated['product_id'])->firstOrFail();
+        $variantId = isset($validated['product_variant_id']) ? (int) $validated['product_variant_id'] : null;
+
+        $hasVariants = $product->variants()->where('is_active', true)->exists();
+        $variant = null;
+        if ($hasVariants) {
+            if (!$variantId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please select a variant for this product.',
+                ], 422);
+            }
+
+            $variant = ProductVariant::where('id', $variantId)
+                ->where('product_id', $product->product_id)
+                ->where('is_active', true)
+                ->first();
+            if (!$variant) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selected variant is not available.',
+                ], 404);
+            }
+        }
+
+        $request->session()->put('buy_now', [
+            'product_id' => (int) $product->product_id,
+            'product_variant_id' => $variant?->id,
+            'variant_name' => $variant?->name,
+            'quantity' => (int) ($validated['quantity'] ?? 1),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'redirect' => route('checkout.index'),
+        ]);
+    }
+
+    public function cancelBuyNow(Request $request)
+    {
+        $request->session()->forget('buy_now');
+
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->route('cart.index');
+    }
+
+    public function checkout(Request $request): View
+    {
+        $cartItems = [];
+
+        $buyNow = session('buy_now');
+        if (is_array($buyNow) && isset($buyNow['product_id'])) {
+            $product = Product::where('product_id', (int) $buyNow['product_id'])->first();
+            if ($product) {
+                $variant = null;
+                if (!empty($buyNow['product_variant_id'])) {
+                    $variant = ProductVariant::where('id', (int) $buyNow['product_variant_id'])
+                        ->where('product_id', $product->product_id)
+                        ->where('is_active', true)
+                        ->first();
+                }
+
+                $unitPrice = (float) ($variant?->effective_price ?? $product->price);
+                $stockUnlimited = (bool) ($variant?->stock_unlimited ?? $product->stock_unlimited ?? false);
+                $stockQty = (int) ($variant?->stock ?? $product->stock ?? 0);
+
+                $cartItems[] = [
+                    'product_id' => $product->product_id,
+                    'product_variant_id' => $variant?->id,
+                    'variant_name' => $variant?->name,
+                    'title' => $product->product_name,
+                    'description' => $product->description,
+                    'price' => $unitPrice,
+                    'qty' => (int) max(1, (int) ($buyNow['quantity'] ?? 1)),
+                    'image' => asset($product->image_path ?? 'images/placeholder.png'),
+                    'stock' => $stockQty,
+                    'stock_unlimited' => $stockUnlimited,
+                ];
+            }
+
+            return view('checkout', ['cartItems' => $cartItems, 'buyNowMode' => true]);
+        }
+        
+        // Optional: checkout only selected cart items (from /cart selection)
+        $selectedItemsRaw = $request->query('selected_items', []);
+        $selectedCartItemIds = collect(is_array($selectedItemsRaw) ? $selectedItemsRaw : [$selectedItemsRaw])
+            ->map(fn ($v) => (int) $v)
+            ->filter(fn ($v) => $v > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        if (Auth::check()) {
+            // Get cart from database for logged-in users
+            $dbCartQuery = CartItem::where('user_id', Auth::id())
+                ->with(['product', 'variant']);
+
+            if (!empty($selectedCartItemIds)) {
+                $dbCartQuery->whereIn('id', $selectedCartItemIds);
+            } elseif ($request->has('selected_items')) {
+                // User explicitly selected none; send back to cart.
+                return redirect()->route('cart.index')->with('error', 'Please select at least one item to checkout.');
+            }
+
+            $dbCartItems = $dbCartQuery->get();
+
+            foreach ($dbCartItems as $item) {
+                if ($item->product) {
+                    $unitPrice = (float) ($item->variant?->effective_price ?? $item->product->price);
+                    $stockUnlimited = (bool) ($item->variant?->stock_unlimited ?? $item->product->stock_unlimited ?? false);
+                    $stockQty = (int) ($item->variant?->stock ?? $item->product->stock ?? 0);
+
+                    $cartItems[] = [
+                        'product_id' => $item->product->product_id,
+                        'cart_item_id' => $item->id,
+                        'product_variant_id' => $item->product_variant_id,
+                        'variant_name' => $item->variant?->name,
+                        'title' => $item->product->product_name,
+                        'description' => $item->product->description,
+                        'price' => $unitPrice,
+                        'qty' => $item->quantity,
+                        'image' => asset($item->product->image_path ?? 'images/placeholder.png'),
+                        'stock' => $stockQty,
+                        'stock_unlimited' => $stockUnlimited,
+                    ];
+                }
+            }
+        }
+        
+        return view('checkout', ['cartItems' => $cartItems, 'buyNowMode' => false]);
     }
 
     public function store(Request $request): \Illuminate\Http\JsonResponse
     {
         $validated = $request->validate([
-            'items' => 'required|array',
-            'items.*.product_id' => 'required|exists:products,product_id',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|integer|exists:products,product_id',
+            'items.*.product_variant_id' => 'nullable|integer',
             'items.*.quantity' => 'required|integer|min:1',
-            'items.*.price' => 'required|numeric',
-            'shipping_address' => 'required|string',
+            'shipping_address' => [
+                'required',
+                'string',
+                'min:10',
+                'max:1000',
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    $address = trim((string) $value);
+                    if ($address === '') {
+                        $fail('Please select your shipping address.');
+                        return;
+                    }
+
+                    // Prevent placeholder text from the PH address builder being submitted.
+                    if (preg_match('/\bSelect\b/i', $address)) {
+                        $fail('Please select your full shipping address (region, province, city, barangay).');
+                    }
+                },
+            ],
             'shipping_method' => 'required|string',
             'shipping_fee' => 'required|numeric',
             'payment_method' => 'required|string',
             'order_notes' => 'nullable|string',
         ]);
 
-        $subtotal = array_sum(array_map(fn($item) => $item['price'] * $item['quantity'], $validated['items']));
-        $total = $subtotal + $validated['shipping_fee'];
+        $buyNow = $request->session()->get('buy_now');
+        $isBuyNow = is_array($buyNow) && isset($buyNow['product_id']);
+        if ($isBuyNow) {
+            // Enforce buy-now checkout product/variant from session,
+            // but allow the checkout page payload to control quantity.
+            // (Users can change qty on the checkout page; session quantity may still be 1.)
+            $submitted = $validated['items'][0] ?? null;
+            $submittedQty = is_array($submitted) ? (int) ($submitted['quantity'] ?? 0) : 0;
+            $qty = $submittedQty > 0 ? $submittedQty : (int) ($buyNow['quantity'] ?? 1);
 
-        $order = Order::create([
-            'user_id' => auth()->id(),
-            'subtotal' => $subtotal,
-            'shipping_fee' => $validated['shipping_fee'],
-            'total' => $total,
-            'shipping_address' => $validated['shipping_address'],
-            'shipping_method' => $validated['shipping_method'],
-            'payment_method' => $validated['payment_method'],
-            'order_notes' => $validated['order_notes'] ?? null,
-            'status' => 'pending',
-        ]);
-
-        foreach ($validated['items'] as $item) {
-            OrderItem::create([
-                'order_id' => $order->id,
-                'product_id' => $item['product_id'],
-                'quantity' => $item['quantity'],
-                'price' => $item['price'],
-            ]);
+            $validated['items'] = [[
+                'product_id' => (int) $buyNow['product_id'],
+                'product_variant_id' => !empty($buyNow['product_variant_id']) ? (int) $buyNow['product_variant_id'] : null,
+                'quantity' => (int) max(1, $qty),
+            ]];
         }
 
-        return response()->json([
-            'id' => $order->id,
-            'message' => 'Order placed successfully',
-        ], 201);
+        try {
+            return DB::transaction(function () use ($validated, $isBuyNow) {
+                $requestedLines = collect($validated['items'])
+                    ->map(function ($row) {
+                        return [
+                            'product_id' => (int) $row['product_id'],
+                            'product_variant_id' => array_key_exists('product_variant_id', $row) && $row['product_variant_id'] !== null
+                                ? (int) $row['product_variant_id']
+                                : null,
+                            'quantity' => (int) $row['quantity'],
+                        ];
+                    })
+                    ->groupBy(function ($row) {
+                        return (string) $row['product_id'] . ':' . (string) ($row['product_variant_id'] ?? 0);
+                    })
+                    ->map(function ($rows) {
+                        $first = $rows->first();
+                        return [
+                            'product_id' => (int) $first['product_id'],
+                            'product_variant_id' => $first['product_variant_id'],
+                            'quantity' => (int) $rows->sum('quantity'),
+                        ];
+                    })
+                    ->values();
+
+                $productIds = $requestedLines->pluck('product_id')->unique()->values()->all();
+                $products = Product::whereIn('product_id', $productIds)
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('product_id');
+
+                $variantIds = $requestedLines
+                    ->pluck('product_variant_id')
+                    ->filter(fn ($v) => $v !== null)
+                    ->unique()
+                    ->values()
+                    ->all();
+                $variants = empty($variantIds)
+                    ? collect()
+                    : ProductVariant::whereIn('id', $variantIds)->lockForUpdate()->get()->keyBy('id');
+
+                // Validate stock & variant correctness
+                foreach ($requestedLines as $line) {
+                    $productId = (int) $line['product_id'];
+                    $variantId = $line['product_variant_id'] !== null ? (int) $line['product_variant_id'] : null;
+                    $qty = (int) $line['quantity'];
+
+                    $product = $products->get($productId);
+                    if (!$product) {
+                        throw new \RuntimeException('Product not found', 404);
+                    }
+
+                    $hasVariants = $product->variants()->where('is_active', true)->exists();
+                    if ($hasVariants && !$variantId) {
+                        throw new \RuntimeException('Variant is required for ' . $product->product_name, 409);
+                    }
+
+                    if (!$hasVariants && $variantId) {
+                        throw new \RuntimeException('Variant is not applicable for ' . $product->product_name, 409);
+                    }
+
+                    $variant = null;
+                    if ($variantId) {
+                        $variant = $variants->get($variantId);
+                        if (!$variant || (int) $variant->product_id !== (int) $productId || !(bool) $variant->is_active) {
+                            throw new \RuntimeException('Selected variant is not available for ' . $product->product_name, 404);
+                        }
+                    }
+
+                    $isUnlimited = (bool) ($variant?->stock_unlimited ?? $product->stock_unlimited ?? false);
+                    $available = (int) ($variant?->stock ?? $product->stock ?? 0);
+                    if (!$isUnlimited && $available < $qty) {
+                        $msg = $available <= 0
+                            ? ($product->product_name . ' is out of stock')
+                            : ('Only ' . $available . ' left for ' . $product->product_name);
+                        throw new \RuntimeException($msg, 409);
+                    }
+                }
+
+                // Totals
+                $subtotal = 0;
+                foreach ($requestedLines as $line) {
+                    $product = $products->get((int) $line['product_id']);
+                    $variantId = $line['product_variant_id'] !== null ? (int) $line['product_variant_id'] : null;
+                    $variant = $variantId ? $variants->get($variantId) : null;
+
+                    $unitPrice = (float) ($variant?->effective_price ?? $product->price);
+                    $subtotal += $unitPrice * (int) $line['quantity'];
+                }
+                $shippingFee = (float) $validated['shipping_fee'];
+                $total = $subtotal + $shippingFee;
+
+                $order = Order::create([
+                    'user_id' => auth()->id(),
+                    'subtotal' => $subtotal,
+                    'shipping_fee' => $shippingFee,
+                    'total' => $total,
+                    'shipping_address' => $validated['shipping_address'],
+                    'shipping_method' => $validated['shipping_method'],
+                    'payment_method' => $validated['payment_method'],
+                    'order_notes' => $validated['order_notes'] ?? null,
+                    'status' => 'pending',
+                ]);
+
+                $orderId = $order->id;
+
+                foreach ($requestedLines as $line) {
+                    $productId = (int) $line['product_id'];
+                    $variantId = $line['product_variant_id'] !== null ? (int) $line['product_variant_id'] : null;
+                    $qty = (int) $line['quantity'];
+
+                    $product = $products->get($productId);
+                    $variant = $variantId ? $variants->get($variantId) : null;
+
+                    $unitPrice = (float) ($variant?->effective_price ?? $product->price);
+
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'product_id' => $productId,
+                        'product_variant_id' => $variant?->id,
+                        'variant_name' => $variant?->name,
+                        'quantity' => $qty,
+                        'price' => $unitPrice,
+                    ]);
+
+                    if ($variant) {
+                        if (!(bool) ($variant->stock_unlimited ?? false)) {
+                            $variant->stock = (int) ($variant->stock ?? 0) - $qty;
+                            $variant->save();
+                        }
+                    } else {
+                        if (!(bool) ($product->stock_unlimited ?? false)) {
+                            $product->stock = (int) ($product->stock ?? 0) - $qty;
+                            $product->stock_updated_at = now();
+                            $product->save();
+                        }
+                    }
+                }
+
+                // Clear cart after successful order placement
+                if ($isBuyNow) {
+                    session()->forget('buy_now');
+                } else {
+                    if (Auth::check()) {
+                        // Partial checkout: remove only purchased items from cart
+                        foreach ($requestedLines as $line) {
+                            $q = CartItem::where('user_id', Auth::id())
+                                ->where('product_id', (int) $line['product_id']);
+                            if ($line['product_variant_id'] !== null) {
+                                $q->where('product_variant_id', (int) $line['product_variant_id']);
+                            } else {
+                                $q->whereNull('product_variant_id');
+                            }
+                            $q->delete();
+                        }
+                    } else {
+                        // Fallback (checkout is typically auth-only)
+                        $cart = session()->get('cart', []);
+                        foreach ($requestedLines as $line) {
+                            $key = (string) ((int) $line['product_id']) . ':' . (string) ((int) ($line['product_variant_id'] ?? 0));
+                            unset($cart[$key]);
+                        }
+                        session()->put('cart', $cart);
+                    }
+                }
+
+                DB::afterCommit(function () use ($orderId) {
+                    $order = Order::with(['user', 'items.product'])->find($orderId);
+                    if (!$order || !$order->user || empty($order->user->email)) {
+                        return;
+                    }
+
+                    Mail::to($order->user->email)->send(new OrderConfirmationMail($order));
+                });
+
+                return response()->json([
+                    'id' => $order->id,
+                    'message' => 'Order placed successfully',
+                ], 201);
+            });
+        } catch (\RuntimeException $e) {
+            $code = (int) $e->getCode();
+            $status = in_array($code, [404, 409], true) ? $code : 400;
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], $status);
+        }
     }
 
     public function myOrders(): View

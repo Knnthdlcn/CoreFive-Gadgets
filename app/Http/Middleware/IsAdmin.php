@@ -15,13 +15,12 @@ class IsAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Check if user is authenticated and has admin role
-        // For now, check if user_id is 1 (first admin user)
-        // In production, add an is_admin or role column to users table
-        if (auth()->check() && auth()->user()->id === 1) {
+        // Check if admin is authenticated using the admin guard
+        if (auth('admin')->check()) {
             return $next($request);
         }
 
-        abort(403, 'Unauthorized access to admin panel');
+        // If not authenticated as admin, redirect to admin login
+        return redirect()->route('admin.login')->with('error', 'Please login as admin to access this area');
     }
 }

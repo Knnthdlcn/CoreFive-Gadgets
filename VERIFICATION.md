@@ -199,6 +199,18 @@ E-Commerce-Laravel/
 1. **Cart Storage**: Client-side only (localStorage), no sync to database until checkout
 2. **Products**: Using placeholder images, should upload real images to `public/images/`
 3. **Email**: Not configured, orders don't send email notifications
+
+### Mail / OTP Notes
+- If `MAIL_MAILER=log` (the default), Laravel will write emails into `storage/logs/laravel.log` instead of sending them.
+- To receive Email OTP codes in your Gmail inbox, configure Gmail SMTP in `.env`:
+	- `MAIL_MAILER=smtp`
+	- `MAIL_HOST=smtp.gmail.com`
+	- `MAIL_PORT=587`
+	- `MAIL_ENCRYPTION=tls`
+	- `MAIL_USERNAME=yourgmail@gmail.com`
+	- `MAIL_PASSWORD=your_google_app_password`
+	- `MAIL_FROM_ADDRESS=yourgmail@gmail.com`
+	- Then run `php artisan config:clear`
 4. **Payment**: No payment gateway integrated, payment method is just UI
 5. **Shipping**: Shipping methods are hardcoded, no real integration
 

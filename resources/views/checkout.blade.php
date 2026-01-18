@@ -65,6 +65,58 @@
                         <h6 class="card-title" style="font-weight: 700; color: #2c3e50; margin-bottom: 12px;">
                             <i class="fas fa-map-marker-alt me-2" style="color: #ffc107;"></i>Shipping Address
                         </h6>
+
+                        @if(Auth::check() && Auth::user()->address)
+                            <div class="mb-3" style="padding: 12px; border: 1px solid #e9ecef; border-radius: 10px; background: #fafafa;">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="addressSource" id="addressSource_saved" value="saved" checked>
+                                    <label class="form-check-label" for="addressSource_saved" style="font-size: 0.95rem; font-weight: 600;">Use my saved address</label>
+                                </div>
+                                <div class="small text-muted" style="line-height: 1.4;">
+                                    {{ Auth::user()->address }}
+                                </div>
+
+                                <div class="form-check mt-3">
+                                    <input class="form-check-input" type="radio" name="addressSource" id="addressSource_custom" value="custom">
+                                    <label class="form-check-label" for="addressSource_custom" style="font-size: 0.95rem; font-weight: 600;">Use a different address</label>
+                                </div>
+                            </div>
+                        @endif
+
+                        <div id="checkoutPhAddressBuilder" class="mb-2" style="display: none;">
+                            <div class="row g-2 mb-2">
+                                <div class="col-12">
+                                    <input type="text" id="checkoutStreet" class="form-control" placeholder="Street / building / unit" style="border-radius: 8px; border: 1px solid #dee2e6; padding: 12px; font-size: 0.95rem;">
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <select id="checkoutRegion" class="form-select" style="border-radius: 8px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 0.95rem;">
+                                        <option value="">Select region</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <select id="checkoutProvince" class="form-select" disabled style="border-radius: 8px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 0.95rem;">
+                                        <option value="">Select province</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <select id="checkoutCity" class="form-select" disabled style="border-radius: 8px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 0.95rem;">
+                                        <option value="">Select city/municipality</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <select id="checkoutBarangay" class="form-select" disabled style="border-radius: 8px; border: 1px solid #dee2e6; padding: 10px 12px; font-size: 0.95rem;">
+                                        <option value="">Select barangay</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <input type="text" id="checkoutPostal" class="form-control" placeholder="Postal code" style="border-radius: 8px; border: 1px solid #dee2e6; padding: 12px; font-size: 0.95rem;">
+                                </div>
+                                <div class="col-12 col-md-8">
+                                    <div class="small text-muted" style="padding: 10px 0;">Your selected address will be filled below.</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <textarea id="shippingAddress" class="form-control mb-2" rows="3" placeholder="Full name, street, city, province, postal code" required style="border-radius: 8px; border: 1px solid #dee2e6; padding: 12px; font-size: 0.95rem;"></textarea>
                         <div class="invalid-feedback d-block" id="shippingAddressError" style="display: none !important; color: #dc3545; font-size: 0.85rem;">
                             Please enter your shipping address to continue.
@@ -123,6 +175,16 @@
                         <i class="fas fa-check me-2"></i>Place Order
                     </button>
                 </div>
+
+                @if(!empty($buyNowMode))
+                    <form method="POST" action="{{ route('buy-now.cancel') }}" class="d-grid mt-2">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-danger" style="border-radius: 8px; font-weight: 600; padding: 12px;">
+                            <i class="fas fa-times me-2"></i>Cancel Buy Now
+                        </button>
+                    </form>
+                @endif
+                <div id="orderError" class="alert alert-danger mt-3 d-none" style="border-radius: 10px;"></div>
                 <!-- Scroll to Top Button -->
                 <button id="scrollToTopBtn" class="btn btn-outline-warning w-100 mt-2" style="display: none; font-weight: 600; border-radius: 8px; transition: all 0.3s ease;">
                     <i class="fas fa-arrow-up me-2"></i>Back to Top
@@ -196,6 +258,27 @@
             font-size: 0.9rem;
         }
         .checkout-items .muted { color: #6c757d; }
+
+        .checkout-items .stock-pill {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: #f8fafc;
+            color: #52606d;
+        }
+        .checkout-items .stock-pill.stock-low { background: #fff7ed; color: #b45309; border-color: rgba(245, 158, 11, 0.35); }
+        .checkout-items .stock-pill.stock-out { background: #fef2f2; color: #b91c1c; border-color: rgba(239, 68, 68, 0.35); }
+        .checkout-items .stock-pill.stock-unlimited { background: #eff6ff; color: #1d4ed8; border-color: rgba(59, 130, 246, 0.35); }
+
+        .checkout-desc {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
         
         .card-summary {
             border: none;
@@ -238,8 +321,110 @@
     @endpush
 
     @push('scripts')
-        <script src="{{ asset('js/cart.js') }}"></script>
-        <script src="{{ asset('js/checkout.js') }}"></script>
+        <script>
+            window.isBuyNowCheckout = @json($buyNowMode ?? false);
+        </script>
+        @if(Auth::check())
+        <script>
+            // For logged-in users, set server-side cart data FIRST before loading checkout.js
+            window.serverCartItems = {!! json_encode($cartItems) !!};
+            console.log('Server cart items loaded:', window.serverCartItems);
+            window.savedShippingAddress = @json(Auth::user()->address);
+            window.savedShippingAddressCodes = {
+                region: @json(Auth::user()->address_region_code),
+                province: @json(Auth::user()->address_province_code),
+                city: @json(Auth::user()->address_city_code),
+                barangay: @json(Auth::user()->address_barangay_code),
+                street: @json(Auth::user()->address_street),
+                postal: @json(Auth::user()->address_postal_code),
+            };
+        </script>
+        @endif
+        <script src="{{ asset('js/ph-address.js') }}"></script>
+        <script src="{{ asset('js/checkout.js') }}?v={{ @filemtime(public_path('js/checkout.js')) ?: time() }}"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const addressTextarea = document.getElementById('shippingAddress');
+                const builder = document.getElementById('checkoutPhAddressBuilder');
+
+                const setTextarea = (val) => {
+                    if (!addressTextarea) return;
+                    addressTextarea.value = val || '';
+                };
+
+                const saved = (typeof window.savedShippingAddress === 'string') ? window.savedShippingAddress : '';
+                if (saved && addressTextarea) {
+                    setTextarea(saved);
+                }
+
+                const savedRadio = document.getElementById('addressSource_saved');
+                const customRadio = document.getElementById('addressSource_custom');
+
+                const showBuilder = async (show) => {
+                    if (!builder) return;
+                    builder.style.display = show ? 'block' : 'none';
+                    if (!show) return;
+
+                    if (builder.dataset.inited === '1') return;
+                    builder.dataset.inited = '1';
+
+                    if (window.PHAddress && window.PHAddress.initSelector) {
+                        await window.PHAddress.initSelector({
+                            regionSelect: '#checkoutRegion',
+                            provinceSelect: '#checkoutProvince',
+                            citySelect: '#checkoutCity',
+                            barangaySelect: '#checkoutBarangay',
+                            streetInput: '#checkoutStreet',
+                            postalInput: '#checkoutPostal',
+                            previewTextarea: '#shippingAddress',
+                            onAnyChange: () => {},
+                            initial: {
+                                region: window.savedShippingAddressCodes?.region || '',
+                                province: window.savedShippingAddressCodes?.province || '',
+                                city: window.savedShippingAddressCodes?.city || '',
+                                barangay: window.savedShippingAddressCodes?.barangay || '',
+                            },
+                        });
+
+                        // Pre-fill street/postal if we have it
+                        const street = document.getElementById('checkoutStreet');
+                        const postal = document.getElementById('checkoutPostal');
+                        if (street && !street.value && window.savedShippingAddressCodes?.street) street.value = window.savedShippingAddressCodes.street;
+                        if (postal && !postal.value && window.savedShippingAddressCodes?.postal) postal.value = window.savedShippingAddressCodes.postal;
+                        // Trigger preview recompute
+                        street?.dispatchEvent(new Event('input'));
+                        postal?.dispatchEvent(new Event('input'));
+                    }
+                };
+
+                const onSourceChange = async () => {
+                    const useSaved = savedRadio && savedRadio.checked;
+                    if (useSaved) {
+                        setTextarea(saved);
+                        await showBuilder(false);
+                        addressTextarea?.setAttribute('readonly', 'readonly');
+                    } else {
+                        addressTextarea?.removeAttribute('readonly');
+                        await showBuilder(true);
+                        if (!addressTextarea?.value) {
+                            setTextarea('');
+                        }
+                    }
+                };
+
+                savedRadio?.addEventListener('change', onSourceChange);
+                customRadio?.addEventListener('change', onSourceChange);
+
+                // If there is no saved-address radio (guest or no saved address), show builder.
+                if (!savedRadio && builder) {
+                    addressTextarea?.removeAttribute('readonly');
+                    showBuilder(true);
+                } else {
+                    // Default state
+                    onSourceChange();
+                }
+            });
+        </script>
         <script>
             const scrollToTopBtn = document.getElementById('scrollToTopBtn');
             const stickyForms = document.getElementById('stickyForms');

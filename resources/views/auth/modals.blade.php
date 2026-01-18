@@ -42,8 +42,13 @@
 
                     <!-- Forgot Password Link -->
                     <div style="text-align: right; margin-bottom: 24px;">
-                        <a href="#" style="color: #1565c0; text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: all 0.3s ease;">Forgot password?</a>
+                        <a href="{{ route('password.request') }}" style="color: #1565c0; text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: all 0.3s ease;">Forgot password?</a>
                     </div>
+
+                    <!-- Google Login -->
+                    <a href="{{ route('auth.google.redirect') }}" class="btn w-100" style="border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; font-weight: 700; color: #1f2d3a; background: #fff; display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom: 18px;">
+                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style="width:18px;height:18px;"> Continue with Google
+                    </a>
                 </div>
 
                 <!-- Footer -->
@@ -87,6 +92,17 @@
                             <i class="fas fa-exclamation-circle" style="margin-top: 2px; flex-shrink: 0;"></i>
                             <div id="signupErrorText"></div>
                         </div>
+                    </div>
+
+                    <!-- Google Signup -->
+                    <a href="{{ route('auth.google.redirect') }}" class="btn w-100" style="border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; font-weight: 700; color: #1f2d3a; background: #fff; display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom: 16px;">
+                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style="width:18px;height:18px;"> Continue with Google
+                    </a>
+
+                    <div style="display:flex; align-items:center; gap:12px; margin: 8px 0 18px 0;">
+                        <div style="flex:1; height:1px; background:#f0f0f0;"></div>
+                        <div style="color:#999; font-size:0.85rem; font-weight:600;">or sign up with email</div>
+                        <div style="flex:1; height:1px; background:#f0f0f0;"></div>
                     </div>
 
                     <!-- Name Row -->
@@ -142,15 +158,45 @@
                     <!-- Phone Field -->
                     <div class="mb-4">
                         <label for="contact" class="form-label" style="font-weight: 600; color: #222; font-size: 0.95rem; margin-bottom: 8px;">Phone Number (Optional)</label>
-                        <input type="tel" class="form-control" id="contact" name="contact" pattern="09[0-9]{9}" style="border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; font-size: 0.95rem; transition: all 0.3s ease;" placeholder="09XXXXXXXXX">
+                        <input type="tel" class="form-control" id="contact" name="contact" pattern="09[0-9]{9}" inputmode="numeric" maxlength="11" autocomplete="tel" style="border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; font-size: 0.95rem; transition: all 0.3s ease;" placeholder="09XXXXXXXXX">
                         <small style="color: #999; display: block; margin-top: 6px;">For order updates and support</small>
                     </div>
 
                     <!-- Address Field -->
                     <div class="mb-4">
                         <label for="address" class="form-label" style="font-weight: 600; color: #222; font-size: 0.95rem; margin-bottom: 8px;">Address (Optional)</label>
-                        <textarea class="form-control" id="address" name="address" rows="2" style="border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; font-size: 0.95rem; transition: all 0.3s ease; resize: none;" placeholder="Street address, city, state..."></textarea>
-                        <small style="color: #999; display: block; margin-top: 6px;">Used for shipping and deliveries</small>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div style="grid-column: 1 / -1;">
+                                <input type="text" class="form-control" id="signupStreet" name="address_street" style="border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; font-size: 0.95rem; transition: all 0.3s ease;" placeholder="House no., street, subdivision, unit">
+                            </div>
+                            <div>
+                                <select class="form-select" id="signupRegion" name="address_region_code" style="border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; font-size: 0.95rem; transition: all 0.3s ease;">
+                                    <option value="">Select region</option>
+                                </select>
+                            </div>
+                            <div>
+                                <select class="form-select" id="signupProvince" name="address_province_code" disabled style="border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; font-size: 0.95rem; transition: all 0.3s ease;">
+                                    <option value="">Select province</option>
+                                </select>
+                            </div>
+                            <div>
+                                <select class="form-select" id="signupCity" name="address_city_code" disabled style="border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; font-size: 0.95rem; transition: all 0.3s ease;">
+                                    <option value="">Select city/municipality</option>
+                                </select>
+                            </div>
+                            <div>
+                                <select class="form-select" id="signupBarangay" name="address_barangay_code" disabled style="border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; font-size: 0.95rem; transition: all 0.3s ease;">
+                                    <option value="">Select barangay</option>
+                                </select>
+                            </div>
+                            <div style="grid-column: 1 / -1;">
+                                <input type="text" class="form-control" id="signupPostal" name="address_postal_code" style="border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; font-size: 0.95rem; transition: all 0.3s ease;" placeholder="Postal code (optional)">
+                            </div>
+                        </div>
+
+                        <textarea class="form-control" id="address" name="address" rows="2" readonly style="border: 2px solid #e0e0e0; border-radius: 10px; padding: 12px 16px; font-size: 0.95rem; transition: all 0.3s ease; resize: none; background: #f8f9fa;" placeholder="Address preview (auto-filled)"></textarea>
+                        <small style="color: #999; display: block; margin-top: 6px;">Pick your address above — this preview is what we’ll use for shipping.</small>
                     </div>
 
                     <!-- Terms checkbox -->
@@ -182,6 +228,8 @@
         </div>
     </div>
 </div>
+
+<script src="{{ asset('js/ph-address.js') }}"></script>
 
 <script>
 function switchToLogin(e) {
@@ -247,11 +295,11 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
         });
         const data = await response.json();
         if (response.ok) {
-            window.location.href = '{{ route("home") }}';
+            window.location.href = data.redirect_url || '{{ route("home") }}';
         } else {
             // Show error in the alert box
             const errorText = document.getElementById('loginErrorText');
-            errorText.textContent = data.error || 'Invalid email or password. Please try again.';
+            errorText.textContent = data.message || data.error || 'Invalid email or password. Please try again.';
             errorAlert.style.display = 'block';
             errorAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
@@ -369,7 +417,7 @@ document.getElementById('signupForm')?.addEventListener('submit', async (e) => {
         });
         const data = await response.json();
         if (response.ok) {
-            window.location.href = '{{ route("home") }}';
+            window.location.href = data.redirect_url || '{{ route("home") }}';
         } else {
             showSignupError(data.message || 'Signup failed. Email may already be in use.');
         }
@@ -515,7 +563,7 @@ document.getElementById('loginPassword')?.addEventListener('blur', function() {
 });
 
 // Add input focus styling for signup
-const signupInputs = ['firstName', 'lastName', 'signupEmail', 'signupPassword', 'signupPasswordConfirm', 'contact', 'address'];
+const signupInputs = ['firstName', 'lastName', 'signupEmail', 'signupPassword', 'signupPasswordConfirm', 'contact', 'signupStreet', 'signupRegion', 'signupProvince', 'signupCity', 'signupBarangay', 'signupPostal', 'address'];
 signupInputs.forEach(id => {
     document.getElementById(id)?.addEventListener('focus', function() {
         this.style.borderColor = '#1565c0';
@@ -525,5 +573,37 @@ signupInputs.forEach(id => {
         this.style.borderColor = '#e0e0e0';
         this.style.boxShadow = 'none';
     });
+});
+
+// Force phone input to digits only and max length 11
+document.getElementById('contact')?.addEventListener('input', function() {
+    const digitsOnly = this.value.replace(/\D/g, '').slice(0, 11);
+    if (this.value !== digitsOnly) {
+        this.value = digitsOnly;
+    }
+});
+
+// Initialize PH address dropdowns for signup
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.PHAddress && window.PHAddress.initSelector) {
+        (async () => {
+            try {
+                await window.PHAddress.initSelector({
+                    regionSelect: '#signupRegion',
+                    provinceSelect: '#signupProvince',
+                    citySelect: '#signupCity',
+                    barangaySelect: '#signupBarangay',
+                    streetInput: '#signupStreet',
+                    postalInput: '#signupPostal',
+                    previewTextarea: '#address',
+                    onAnyChange: () => {},
+                    initial: {},
+                });
+            } catch (e) {
+                // Non-blocking: signup can still proceed without address dropdown data.
+                console.warn('PH address init failed', e);
+            }
+        })();
+    }
 });
 </script>

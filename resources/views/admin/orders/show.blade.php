@@ -31,12 +31,16 @@
                                 <tr>
                                     <td>
                                         <strong>{{ $item->product->product_name }}</strong>
+                                        @if(!empty($item->variant_name))
+                                            <br>
+                                            <small style="color: #7f8c8d;">Variant: {{ $item->variant_name }}</small>
+                                        @endif
                                         <br>
                                         <small style="color: #7f8c8d;">Product ID: {{ $item->product->product_id }}</small>
                                     </td>
-                                    <td>${{ number_format($item->price, 2) }}</td>
+                                    <td>₱{{ number_format($item->price, 2) }}</td>
                                     <td>{{ $item->quantity }}</td>
-                                    <td><strong>${{ number_format($item->quantity * $item->price, 2) }}</strong></td>
+                                    <td><strong>₱{{ number_format($item->quantity * $item->price, 2) }}</strong></td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -51,9 +55,9 @@
                             <p style="color: #2c3e50; font-weight: 700; font-size: 1.1rem; margin: 10px 0 0 0;">Total:</p>
                         </div>
                         <div style="text-align: right;">
-                            <p style="margin: 0;"><strong>${{ number_format($order->subtotal, 2) }}</strong></p>
-                            <p style="margin: 5px 0 0 0;"><strong>${{ number_format($order->shipping_fee, 2) }}</strong></p>
-                            <p style="color: #1565c0; font-weight: 700; font-size: 1.3rem; margin: 10px 0 0 0;">${{ number_format($order->total, 2) }}</p>
+                            <p style="margin: 0;"><strong>₱{{ number_format($order->subtotal, 2) }}</strong></p>
+                            <p style="margin: 5px 0 0 0;"><strong>₱{{ number_format($order->shipping_fee, 2) }}</strong></p>
+                            <p style="color: #1565c0; font-weight: 700; font-size: 1.3rem; margin: 10px 0 0 0;">₱{{ number_format($order->total, 2) }}</p>
                         </div>
                     </div>
                 </div>
